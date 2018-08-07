@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+from glob import glob
+import subprocess
+import difflib
+import numpy as np
+
+tests = glob('./tests/*/')
+
+for test in tests:
+    print('-- Running tests in directory', test)
+
+    # Run Dual
+    p = subprocess.Popen(['./runMyLPSolver', 'dual', test + 'x', test + 'A', test + 'b', test + 'c'], stdout=subprocess.PIPE)
+    out = p.communicate()[0].decode('utf-8')
+
+    filename = test.replace('tests', 'testouts') + 'dual.out'
+    with open(filename, 'r') as f:
+        # TODO: Work out whitespace differences.
+        expected_out = list(filter(lambda x: x != '' , map(lambda x: x.strip(), f.readlines())))
+        out = list(filter(lambda x: x != '', map(lambda x: x.strip(), out.split('\n'))))
+        if out == expected_out:
+            print('dual.out test passed.')
+        else:
+            print('ERROR: Test, {}, failed!'.format(filename))
+            exit()
+
+    # Run Solve
+    p = subprocess.Popen(['./runMyLPSolver', 'solve', test + 'x', test + 'A', test + 'b', test + 'c'], stdout=subprocess.PIPE)
+    out = p.communicate()[0].decode('utf-8')
+    filename = test.replace('tests', 'testouts') + 'solve.out'
+    passed = False
+    with open(filename, 'r') as f:
+        # TODO: Work out whitespace differences.
+        expected_out = list(filter(lambda x: x != '' , map(lambda x: x.strip(), f.readlines())))
+        out = list(filter(lambda x: x != '', map(lambda x: x.strip(), out.split('\n'))))
+        if out == expected_out:
+            passed = True
+        else:
+            # Floating point check
+            try:
+                e_obj = float(expected_out[0])
+                e_x = np.array(expected_out[1].split('\t'), dtype=np.float64)
+                obj = float(out[0])
+                x = np.array(out[1].split('\t'), dtype=np.float64)
+                if np.isclose(e_obj, obj) and np.isclose(e_x, x).all():
+                    passed = True
+            except:
+                pass
+        if passed:
+            print('solve.out test passed.')
+        else:
+            print('ERROR: Test, {}, failed!'.format(filename))
+            exit()

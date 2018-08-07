@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+'''
+    The goal of this program is to generate random LPs and test the results
+    of my simplex program vs. scipy.optimize.linprog.
+
+    This is not complete. 
+'''
+
+import scipy.optimize
+
+# TODO: Stress test my implementation against scipy.optimize.
